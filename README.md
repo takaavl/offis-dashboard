@@ -1,4 +1,4 @@
-Team Dashboard v0.8
+Team Dashboard v0.9
 
 # Team Dashboard
 
@@ -57,3 +57,8 @@ See `DEPLOY_GUIDE.md` for the simple GitHub + Vercel walkthrough.
 
 - Agent/map artwork still uses remote URLs contained in Tracker exports.
 - Admin is local-only by design; hosted persistent editing would require a hosted database such as Postgres/Supabase/Neon rather than bundled SQLite.
+
+
+## Responsive
+
+The public dashboard is responsive for desktop, tablet and phone. Mobile layouts prioritize readable cards, swipeable match tabs and scrollable dense data tables instead of hiding analytics.

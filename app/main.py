@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import base64
+import hashlib
+import hmac
+import secrets
 from collections import defaultdict
 from fastapi import FastAPI, Request, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -202,7 +206,38 @@ def leaderboard_from_raw(raw_json, team_id, canonical_names=None):
     return out
 
 
-templates.env.globals.update(pct=pct, status_label=status_label, roster_label=roster_label, admin_enabled=(not bool(os.environ.get("VERCEL"))))
+ADMIN_COOKIE = "team_admin_session"
+
+def _admin_codes():
+    raw = os.environ.get("ADMIN_CODES") or os.environ.get("ADMIN_CODE") or ""
+    codes = [x.strip() for x in raw.split(",") if x.strip()]
+    local_file = ROOT / "data" / "admin_codes.txt"
+    if not codes and local_file.exists():
+        codes = [x.strip() for x in local_file.read_text(encoding="utf-8").splitlines() if x.strip()]
+    return codes
+
+def _admin_secret():
+    explicit = os.environ.get("ADMIN_COOKIE_SECRET")
+    if explicit:
+        return explicit.encode("utf-8")
+    codes = _admin_codes()
+    seed = "|".join(codes) if codes else "admin-not-configured"
+    return hashlib.sha256((seed + "|team-dashboard-admin-v1").encode("utf-8")).digest()
+
+def _admin_cookie_value():
+    sig = hmac.new(_admin_secret(), b"authorized", hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(sig).decode("ascii").rstrip("=")
+
+def is_admin(request: Request):
+    cookie = request.cookies.get(ADMIN_COOKIE, "")
+    return bool(cookie) and secrets.compare_digest(cookie, _admin_cookie_value())
+
+def _require_admin(request: Request, next_path: str = "/admin/"):
+    if not is_admin(request):
+        return RedirectResponse(url=f"/admin/?next={next_path}", status_code=303)
+    return None
+
+templates.env.globals.update(pct=pct, status_label=status_label, roster_label=roster_label)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -440,20 +475,61 @@ def history(request: Request):
 
 @app.get("/data-health", response_class=HTMLResponse)
 def data_health(request: Request):
+    guard = _require_admin(request, "/data-health")
+    if guard:
+        return guard
     with connect() as con:
         issues=con.execute("SELECT * FROM data_issues ORDER BY resolved,CASE severity WHEN 'error' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,id").fetchall()
         stats={"maps":con.execute("SELECT COUNT(*) FROM maps").fetchone()[0],"series":con.execute("SELECT COUNT(*) FROM series").fetchone()[0],"events":con.execute("SELECT COUNT(*) FROM events").fetchone()[0],"players":con.execute("SELECT COUNT(*) FROM players").fetchone()[0],"open":con.execute("SELECT COUNT(*) FROM data_issues WHERE resolved=0").fetchone()[0]}
-    return templates.TemplateResponse(request,"data_health.html",{"issues":issues,"stats":stats})
+    return templates.TemplateResponse(request,"data_health.html",{"issues":issues,"stats":stats,"admin_view":True})
 
 
-@app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request, ok: str | None = None):
-    if os.environ.get("VERCEL"):
-        raise HTTPException(404, "Admin is local-only")
+@app.get("/admin", include_in_schema=False)
+def admin_redirect():
+    return RedirectResponse(url="/admin/", status_code=307)
+
+
+@app.get("/admin/", response_class=HTMLResponse)
+def admin_page(request: Request, ok: str | None = None, next: str | None = None):
+    if not is_admin(request):
+        return templates.TemplateResponse(request,"admin_login.html",{
+            "next_path": next or "/admin/",
+            "configured": bool(_admin_codes()),
+            "error": None,
+        })
     with connect() as con:
         recent_series=con.execute("""SELECT s.id,s.opponent,s.stage,e.name event_name FROM series s JOIN events e ON e.id=s.event_id WHERE s.is_bye=0 ORDER BY s.played_at DESC,s.id DESC LIMIT 30""").fetchall()
         counts={"maps":con.execute("SELECT COUNT(*) c FROM maps").fetchone()["c"],"series":con.execute("SELECT COUNT(*) c FROM series WHERE is_bye=0").fetchone()["c"],"players":con.execute("SELECT COUNT(*) c FROM players").fetchone()["c"]}
-    return templates.TemplateResponse(request,"admin.html",{"recent_series":recent_series,"counts":counts,"message":ok})
+    return templates.TemplateResponse(request,"admin.html",{
+        "recent_series":recent_series,"counts":counts,"message":ok,
+        "admin_view":True,"vercel_readonly":bool(os.environ.get("VERCEL"))
+    })
+
+
+@app.post("/admin/login", response_class=HTMLResponse)
+async def admin_login(request: Request, code: str = Form(""), next_path: str = Form("/admin/")):
+    codes = _admin_codes()
+    valid = bool(codes) and any(secrets.compare_digest(code, c) for c in codes)
+    if not valid:
+        return templates.TemplateResponse(request,"admin_login.html",{
+            "next_path": next_path or "/admin/",
+            "configured": bool(codes),
+            "error": "Invalid admin code." if codes else "No admin code is configured yet.",
+        }, status_code=401)
+    safe_next = next_path if next_path.startswith("/") and not next_path.startswith("//") else "/admin/"
+    response = RedirectResponse(url=safe_next, status_code=303)
+    response.set_cookie(
+        ADMIN_COOKIE, _admin_cookie_value(), max_age=60*60*12, httponly=True,
+        secure=bool(os.environ.get("VERCEL")), samesite="lax", path="/"
+    )
+    return response
+
+
+@app.post("/admin/logout")
+def admin_logout():
+    response = RedirectResponse(url="/admin/", status_code=303)
+    response.delete_cookie(ADMIN_COOKIE, path="/")
+    return response
 
 
 @app.post("/admin/import", response_class=HTMLResponse)
@@ -461,8 +537,11 @@ async def admin_import_map(request: Request,
     existing_series_id: str = Form(""), event_name: str = Form(""), competition: str = Form(""), stage: str = Form(""),
     opponent: str = Form(""), best_of: int = Form(1), series_code: str = Form(""), map_index: str = Form(""),
     explicit_team_id: str = Form(""), overrides_text: str = Form(""), json_text: str = Form(""), json_file: UploadFile | None = File(None)):
+    guard = _require_admin(request, "/admin/")
+    if guard:
+        return guard
     if os.environ.get("VERCEL"):
-        raise HTTPException(404, "Admin is local-only")
+        raise HTTPException(403, "Hosted admin is read-only. Import locally, then prepare and redeploy the compact database.")
     raw=json_text.strip()
     if json_file and json_file.filename:
         raw=(await json_file.read()).decode("utf-8",errors="replace").strip()
@@ -479,4 +558,7 @@ async def admin_import_map(request: Request,
     with connect() as con:
         recent_series=con.execute("""SELECT s.id,s.opponent,s.stage,e.name event_name FROM series s JOIN events e ON e.id=s.event_id WHERE s.is_bye=0 ORDER BY s.played_at DESC,s.id DESC LIMIT 30""").fetchall()
         counts={"maps":con.execute("SELECT COUNT(*) c FROM maps").fetchone()["c"],"series":con.execute("SELECT COUNT(*) c FROM series WHERE is_bye=0").fetchone()["c"],"players":con.execute("SELECT COUNT(*) c FROM players").fetchone()["c"]}
-    return templates.TemplateResponse(request,"admin.html",{"recent_series":recent_series,"counts":counts,"message":message,"error":error})
+    return templates.TemplateResponse(request,"admin.html",{
+        "recent_series":recent_series,"counts":counts,"message":message,"error":error,
+        "admin_view":True,"vercel_readonly":False
+    })

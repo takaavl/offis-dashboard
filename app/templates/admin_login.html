@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Admin login · Team Dashboard{% endblock %}
+{% block content %}
+<div class="admin-login-wrap">
+  <section class="admin-login-card">
+    <span class="eyebrow">BACK OFFICE</span>
+    <h1>Admin access</h1>
+    <p class="muted">Enter an admin code to access imports and data integrity tools.</p>
+    {% if error %}<div class="admin-login-error">{{ error }}</div>{% endif %}
+    {% if not configured %}
+      <div class="admin-login-warning"><b>No admin code configured.</b><br>Local: create <code>data/admin_codes.txt</code> with one code per line.<br>Vercel: add <code>ADMIN_CODE</code> in Environment Variables.</div>
+    {% endif %}
+    <form method="post" action="/admin/login" class="admin-login-form">
+      <input type="hidden" name="next_path" value="{{ next_path }}">
+      <label>Admin code<input type="password" name="code" autocomplete="current-password" required autofocus></label>
+      <button class="admin-btn" type="submit">Sign in</button>
+    </form>
+    <a class="admin-back-public" href="/">← Back to dashboard</a>
+  </section>
+</div>
+{% endblock %}

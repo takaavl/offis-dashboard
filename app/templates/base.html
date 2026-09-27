@@ -11,7 +11,7 @@
   <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()"><span></span><span></span><span></span></button>
   <a class="top-brand" href="/"><span class="brand-mark">T</span><span><b>TEAM</b><small>PERFORMANCE HUB</small></span></a>
   <div class="topbar-spacer"></div>
-  <a class="data-dot" href="/data-health" title="Data health"><span></span>Data</a>
+  {% if admin_view %}<a class="admin-top-link" href="/admin/">Admin</a>{% endif %}
 </div>
 <div id="navBackdrop" class="nav-backdrop" onclick="closeNav()"></div>
 <aside id="navDrawer" class="nav-drawer">
@@ -25,13 +25,19 @@
     <a href="/events" class="{% if request.url.path.startswith('/events') %}active{% endif %}"><span>06</span>Events</a>
     <a href="/history" class="{% if request.url.path.startswith('/history') %}active{% endif %}"><span>07</span>History</a>
   </nav>
-  <a class="drawer-health" href="/data-health">Data health <span>→</span></a>
-  {% if admin_enabled %}<a class="drawer-health" href="/admin">Admin <span>→</span></a>{% endif %}
+  {% if admin_view %}
+  <div class="drawer-admin-block">
+    <a class="drawer-health" href="/admin/">Admin dashboard <span>→</span></a>
+    <a class="drawer-health" href="/data-health">Data health <span>→</span></a>
+  </div>
+  {% endif %}
 </aside>
 <main class="content">{% block content %}{% endblock %}</main>
 <script>
 function toggleNav(){const d=document.getElementById('navDrawer'),b=document.getElementById('navBackdrop'),btn=document.querySelector('.burger');const open=!d.classList.contains('open');d.classList.toggle('open',open);b.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));document.body.classList.toggle('nav-open',open)}
 function closeNav(){document.getElementById('navDrawer').classList.remove('open');document.getElementById('navBackdrop').classList.remove('open');document.querySelector('.burger').setAttribute('aria-expanded','false');document.body.classList.remove('nav-open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav()});
+window.addEventListener('resize',()=>{if(window.innerWidth>1100)closeNav()});
 </script>
 </body>
 </html>

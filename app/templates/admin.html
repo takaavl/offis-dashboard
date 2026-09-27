@@ -2,13 +2,14 @@
 {% block title %}Admin · Team Dashboard{% endblock %}
 {% block content %}
 <div class="admin-shell">
-  <div class="page-head"><div><span class="eyebrow">LOCAL DATA MANAGEMENT</span><h1>Admin</h1><p class="muted">Add a new official map from a Tracker JSON. Hosted Vercel builds are read-only.</p></div></div>
+  <div class="page-head"><div><span class="eyebrow">BACK OFFICE</span><h1>Admin</h1><p class="muted">Manage official data and integrity checks.</p></div><div class="admin-head-actions"><a class="admin-secondary-btn" href="/data-health">Data health</a><form method="post" action="/admin/logout"><button class="admin-secondary-btn" type="submit">Logout</button></form></div></div>
   {% if message %}<div class="admin-card admin-ok" style="margin-bottom:16px"><b>{{ message }}</b></div>{% endif %}
   {% if error %}<div class="admin-card admin-error" style="margin-bottom:16px"><b>{{ error }}</b></div>{% endif %}
   <div class="admin-grid">
     <section class="admin-card">
       <h2>Add official map</h2>
-      <form class="admin-form" method="post" action="/admin/import" enctype="multipart/form-data">
+      {% if vercel_readonly %}<div class="admin-readonly"><b>Read-only on Vercel.</b> Import new matches locally, then run the deploy preparation script and push the updated compact database.</div>{% endif %}
+      <form class="admin-form" method="post" action="/admin/import" enctype="multipart/form-data" {% if vercel_readonly %}inert{% endif %}>
         <label>Existing series (optional)
           <select name="existing_series_id">
             <option value="">Create a new series</option>
@@ -36,7 +37,7 @@
         <label>Account overrides (optional)<textarea name="overrides_text" style="min-height:90px" placeholder="Takaa#VLT=Duke&#10;OtherAccount#TAG=TempoKD"></textarea></label>
         <label>Tracker JSON file <input type="file" name="json_file" accept=".json,.txt,application/json,text/plain"></label>
         <label>…or paste JSON<textarea name="json_text" placeholder='{"data": {...}}'></textarea></label>
-        <div class="admin-actions"><button class="admin-btn" type="submit">Import map</button></div>
+        <div class="admin-actions"><button class="admin-btn" type="submit" {% if vercel_readonly %}disabled{% endif %}>Import map</button></div>
       </form>
     </section>
     <aside class="admin-card">

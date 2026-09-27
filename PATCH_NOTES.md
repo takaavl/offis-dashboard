@@ -216,3 +216,42 @@
 
 ### Data
 - No historical match result, roster assignment, composition, event, pistol or player stat was altered by this release.
+
+## v0.9.0 — Responsive pass
+
+### Added
+- Phone-first responsive layout across all public pages, with 390px as the primary QA width.
+- Tablet/small-desktop breakpoint so layouts degrade progressively rather than jumping straight from desktop to phone.
+- Horizontally scrollable BO map tabs, segmented controls, leaderboards and dense data tables where collapsing the information would reduce clarity.
+- Touch-friendly controls and navigation targets.
+
+### Changed
+- Overview stacks into a compact mobile analyst view while preserving the map-pool rows.
+- Match series cards preserve map art, score and compositions without overflowing narrow screens.
+- Match detail moves map tabs to a swipeable row and keeps the full leaderboard available by horizontal scroll.
+- Core players become two columns on medium phones/tablets and one column on narrow phones.
+- Player profiles stack media/content cleanly and simplify map-performance cards for narrow screens.
+- Maps, compositions and events keep the desktop information architecture but reflow for phone use.
+- Admin is usable on phone for emergency/local additions, though desktop remains the recommended workflow for large JSON pastes.
+
+### Data / logic
+- No match, player, roster, event, composition or database logic changed.
+
+## v1.0.0 — Admin separation & access control
+
+### Added
+- Password-code login at `/admin/`.
+- Signed HttpOnly admin session cookie.
+- Local admin codes stored in `data/admin_codes.txt` and ignored by Git.
+- Vercel admin authentication through `ADMIN_CODE` / `ADMIN_CODES` environment variables.
+- Admin logout.
+- Data Health link moved inside the authenticated admin area.
+- Hosted Vercel admin is explicitly read-only.
+
+### Changed
+- Removed Admin and Data Health from all public navigation/showcase surfaces.
+- `/data-health` now requires an authenticated admin session.
+- `START_WINDOWS.bat` asks for a local admin code on first launch.
+
+### Fixed
+- `python-multipart` is included in `requirements.txt` for FastAPI form/file uploads.
