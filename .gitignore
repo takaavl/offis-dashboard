@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Vercel local metadata
+.vercel/
+
+# Private/raw data: never push these to GitHub
+/data/private_raw/
+/data/private_full.sqlite3
+/data/Team's Dashboard.zip
+/data/*.zip
+
+# Local OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

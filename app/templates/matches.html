@@ -1,0 +1,31 @@
+{% extends 'base.html' %}{% block title %}Matches · Team Dashboard{% endblock %}{% block content %}
+<header class="page-head product-head"><div><span class="eyebrow">OFFICIALS</span><h1>Matches & series</h1><p>Official results, map context and team compositions.</p></div></header>
+<div class="series-list refined-series-list">
+{% for g in groups %}{% set s=g.row %}
+<article class="series-card gaming-card refined-series series-outcome-{% if s.is_bye %}na{% else %}{{s.result|lower}}{% endif %} {% if s.is_bye %}muted-row{% endif %}">
+  <div class="series-main refined-series-main">
+    <a class="series-link" href="/matches/{{s.id}}">
+      <span class="result {% if s.is_bye %}na{% else %}{{s.result|lower}}{% endif %}">{% if s.is_bye %}—{% else %}{{s.result}}{% endif %}</span>
+      <div class="series-copy"><small>{{s.played_at[:10] if s.played_at else 'No date'}} · {{s.event_name}}</small><h2>{{s.opponent}}</h2><span>{{s.stage or 'Event match'}} · {% if s.is_bye %}BYE{% else %}BO{{s.best_of}} · {{roster_label(s.roster_category)}}{% endif %}</span></div>
+    </a>
+    <div class="series-score hero-series-score">{% if s.is_bye %}<b>{{s.bye_result}}</b>{% else %}<b>{{s.maps_won}}<i>:</i>{{s.maps_lost}}</b><small>series</small>{% endif %}{% if s.best_of>1 and g.maps %}<button class="icon-btn" type="button" aria-expanded="false" aria-label="Toggle maps" onclick="toggleSeries(this)">⌄</button>{% endif %}</div>
+  </div>
+  {% if s.best_of>1 and g.maps %}<div class="series-drawer collapsed refined-series-drawer">
+    {% for item in g.maps %}{% set m=item.row %}
+    <a class="series-map-row map-media-row" href="/matches/{{s.id}}#map-{{m.id}}">
+      <div class="map-media-block" {% if m.map_image_url %}style="--map-bg:url('{{m.map_image_url}}')"{% endif %}><span>{{m.map_name}}</span><strong>{{m.score_for}}–{{m.score_against}}</strong></div>
+      <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+      <div class="map-context-copy"><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}} start</b><small>{{roster_label(m.roster_category)}}</small></div>
+      <span class="result {{m.result|lower}}">{{m.result}}</span>
+    </a>{% endfor %}
+  </div>
+  {% elif g.maps %}{% set item=g.maps[0] %}{% set m=item.row %}
+  <a class="bo1-strip map-media-row bo1-media-row" href="/matches/{{s.id}}#map-{{m.id}}">
+    <div class="map-media-block" {% if m.map_image_url %}style="--map-bg:url('{{m.map_image_url}}')"{% endif %}><span>{{m.map_name}}</span><strong>{{m.score_for}}–{{m.score_against}}</strong></div>
+    <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+    <div class="map-context-copy"><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}} start</b><small>{{roster_label(m.roster_category)}}</small></div>
+  </a>{% endif %}
+</article>{% endfor %}
+</div>
+<script>function toggleSeries(btn){const d=btn.closest('.series-card').querySelector('.series-drawer');d.classList.toggle('collapsed');const o=!d.classList.contains('collapsed');btn.setAttribute('aria-expanded',o);btn.classList.toggle('open',o)}</script>
+{% endblock %}

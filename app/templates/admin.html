@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Admin · Team Dashboard{% endblock %}
+{% block content %}
+<div class="admin-shell">
+  <div class="page-head"><div><span class="eyebrow">LOCAL DATA MANAGEMENT</span><h1>Admin</h1><p class="muted">Add a new official map from a Tracker JSON. Hosted Vercel builds are read-only.</p></div></div>
+  {% if message %}<div class="admin-card admin-ok" style="margin-bottom:16px"><b>{{ message }}</b></div>{% endif %}
+  {% if error %}<div class="admin-card admin-error" style="margin-bottom:16px"><b>{{ error }}</b></div>{% endif %}
+  <div class="admin-grid">
+    <section class="admin-card">
+      <h2>Add official map</h2>
+      <form class="admin-form" method="post" action="/admin/import" enctype="multipart/form-data">
+        <label>Existing series (optional)
+          <select name="existing_series_id">
+            <option value="">Create a new series</option>
+            {% for s in recent_series %}<option value="{{ s.id }}">#{{ s.id }} · {{ s.opponent }} · {{ s.event_name }}{% if s.stage %} · {{ s.stage }}{% endif %}</option>{% endfor %}
+          </select>
+        </label>
+        <div class="admin-grid">
+          <label>Event <input name="event_name" placeholder="RBCorp Tournament #4"></label>
+          <label>Competition <input name="competition" placeholder="RBCorp Tournament"></label>
+        </div>
+        <div class="admin-grid">
+          <label>Stage <input name="stage" placeholder="Group Stage / Playoffs"></label>
+          <label>Opponent <input name="opponent" placeholder="Opponent name"></label>
+        </div>
+        <div class="admin-grid">
+          <label>Best of
+            <select name="best_of"><option value="1">BO1</option><option value="3">BO3</option><option value="5">BO5</option></select>
+          </label>
+          <label>Map index <input type="number" min="1" max="5" name="map_index" placeholder="Auto"></label>
+        </div>
+        <label>Series code (new series only) <input name="series_code" placeholder="rbcorp4-vs-opponent"></label>
+        <label>Our side (only if auto-detection fails)
+          <select name="explicit_team_id"><option value="">Auto detect</option><option value="Red">Red</option><option value="Blue">Blue</option></select>
+        </label>
+        <label>Account overrides (optional)<textarea name="overrides_text" style="min-height:90px" placeholder="Takaa#VLT=Duke&#10;OtherAccount#TAG=TempoKD"></textarea></label>
+        <label>Tracker JSON file <input type="file" name="json_file" accept=".json,.txt,application/json,text/plain"></label>
+        <label>…or paste JSON<textarea name="json_text" placeholder='{"data": {...}}'></textarea></label>
+        <div class="admin-actions"><button class="admin-btn" type="submit">Import map</button></div>
+      </form>
+    </section>
+    <aside class="admin-card">
+      <h2>Workflow</h2>
+      <p class="admin-note">1. Import the Tracker JSON here locally.<br>2. Check the match, player and map pages.<br>3. Commit <code>data/team_dashboard.sqlite3</code> to GitHub.<br>4. Vercel redeploys automatically from the new commit.</p>
+      <p class="admin-note"><b>Important:</b> raw JSON files are archived in <code>data/private_raw/</code> and ignored by Git. The public database only keeps the compact data needed by the site.</p>
+      <h2 style="margin-top:24px">Current database</h2>
+      <p class="admin-note"><b>{{ counts.maps }}</b> maps · <b>{{ counts.series }}</b> series · <b>{{ counts.players }}</b> players</p>
+    </aside>
+  </div>
+</div>
+{% endblock %}

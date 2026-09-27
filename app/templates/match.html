@@ -1,0 +1,35 @@
+{% extends 'base.html' %}{% block title %}Team vs {{series.opponent}} · Team Dashboard{% endblock %}{% block content %}
+<header class="page-head match-detail-head product-head"><div><a class="back-link" href="/matches">← Matches</a><span class="eyebrow">{{series.event_name}}</span><h1>Our Team <span class="muted-vs">vs</span> {{series.opponent}}</h1><p>{{series.stage or 'Event match'}} · BO{{series.best_of}} · {{roster_label(series.roster_category)}} · {{series.played_at[:10] if series.played_at else 'No date'}}</p></div><div class="big-series-score"><span class="result {{series.result|lower}}">{{series.result}}</span><strong>{{series.maps_won}}<i>:</i>{{series.maps_lost}}</strong></div></header>
+{% if maps|length > 1 %}<nav class="map-tabs" aria-label="Series maps">{% for item in maps %}{% set m=item.row %}<button class="map-tab {% if loop.first %}active{% endif %}" type="button" data-target="map-{{m.id}}" onclick="showMatchMap('map-{{m.id}}',this)"><span>Map {{loop.index}}</span><b>{{m.map_name}}</b><small>{{m.score_for}}–{{m.score_against}}</small></button>{% endfor %}</nav>{% endif %}
+{% for item in maps %}{% set m=item.row %}{% set i=item.insights %}
+<section class="panel match-map-panel match-map-view {% if maps|length > 1 and not loop.first %}is-hidden{% endif %}" id="map-{{m.id}}">
+  <div class="match-map-overview">
+    <div class="match-map-media">
+      {% if m.map_image_url %}<img src="{{m.map_image_url}}" alt="{{m.map_name}} map">{% endif %}
+      <div class="match-map-media-overlay"></div>
+      <div class="match-map-media-copy"><span class="eyebrow">MAP {{loop.index}}</span><h2>{{m.map_name}}</h2></div>
+      <div class="map-score"><span class="result {{m.result|lower}}">{{m.result}}</span><b>{{m.score_for}}<i>:</i>{{m.score_against}}</b></div>
+    </div>
+    <div class="match-map-context">
+      <div class="match-map-context-top"><div><span>START SIDE</span><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}}</b></div><div><span>ROSTER</span><b>{{roster_label(m.roster_category)}}</b></div></div>
+      <div class="match-comp-block"><span>TEAM COMPOSITION</span><div class="agent-icon-line match-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+    </div>
+  </div>
+  <div class="team-insight-grid teamplay-insights">
+    <div><small>TEAM KAST</small><b>{{'%.0f'|format(i.kast or 0)}}%</b><span>Kill / assist / survive / traded</span></div>
+    <div><small>TRADES</small><b>{{i.trades}}</b><span>Deaths traded</span></div>
+    <div><small>ASSISTS</small><b>{{i.assists}}</b><span>Team assists</span></div>
+    <div><small>OPENINGS</small><b>{{i.first_kills}}–{{i.first_deaths}}</b><span>First kills – first deaths</span></div>
+    <div><small>CLUTCHES</small><b>{{i.clutches}}</b><span>Clutches won</span></div>
+    <div><small>PLANTS / DEFUSES</small><b>{{i.plants}} / {{i.defuses}}</b><span>Spike actions</span></div>
+  </div>
+  <div class="side-split"><div><span>ATK rounds</span><b>{{i.attack_wins}} / {{i.attack_played}}</b><small>{{pct(i.attack_wins,i.attack_played)}}%</small></div><div><span>DEF rounds</span><b>{{i.defense_wins}} / {{i.defense_played}}</b><small>{{pct(i.defense_wins,i.defense_played)}}%</small></div></div>
+  <div class="leaderboard analyst-leaderboard"><div class="leader-head"><span>Player</span><span>ACS</span><span>K / D / A</span><span>KAST</span><span>FK–FD</span><span>Trades</span></div>
+  {% for p in item.leaderboard %}{% if loop.index==1 or (not p.is_team and loop.previtem.is_team) %}<div class="team-divider">{{ 'Our Team' if p.is_team else 'Opponents' }}</div>{% endif %}
+  <div class="leader-row {% if p.is_team %}our-team{% endif %}"><div class="leader-player">{% if p.agent_icon %}<img src="{{p.agent_icon}}" alt="{{p.agent}}">{% endif %}<b>{{p.display_name}}</b><small>{{p.agent}}</small></div><span>{{'%.0f'|format(p.acs or 0)}}</span><span>{{p.kills}} / {{p.deaths}} / {{p.assists}}</span><span>{{'%.0f'|format(p.kast or 0)}}%</span><span>{{p.first_kills}}–{{p.first_deaths}}</span><span>{{p.traded}}</span></div>{% endfor %}</div>
+</section>{% endfor %}
+<script>
+function showMatchMap(id,btn){document.querySelectorAll('.match-map-view').forEach(x=>x.classList.toggle('is-hidden',x.id!==id));document.querySelectorAll('.map-tab').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');history.replaceState(null,'','#'+id)}
+window.addEventListener('DOMContentLoaded',()=>{if(location.hash){const id=location.hash.slice(1),btn=document.querySelector('.map-tab[data-target="'+id+'"]');if(document.getElementById(id))showMatchMap(id,btn)}})
+</script>
+{% endblock %}
