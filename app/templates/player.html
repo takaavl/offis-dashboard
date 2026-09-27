@@ -2,7 +2,7 @@
 <header class="player-profile-hero">
   <div class="player-profile-copy">
     <a class="back-link" href="/players">← Players</a>
-    <div class="player-profile-meta"><span class="status {{ player.roster_status }}">{{ status_label(player.roster_status) }}</span>{% if player.role_key %}<span class="profile-role"><img src="{{player.role_icon}}" alt="{{player.role_label}} role icon">{{player.role_label}}</span>{% endif %}</div>
+    <div class="player-profile-meta"><span class="status {{ player.roster_status }}">{{ status_label(player.roster_status) }}</span>{% if player.role_label %}<span class="profile-role">{% if player.role_icon %}<img src="{{player.role_icon}}" alt="{{player.role_label}} role icon">{% endif %}{{player.role_label}}</span>{% endif %}</div>
     <h1>{{ player.canonical_name }}</h1>
     {% if aliases %}<p class="player-aliases">{% for a in aliases %}<code>{{ a.riot_id }}</code>{% if not loop.last %}<span>·</span>{% endif %}{% endfor %}</p>{% endif %}
     {% if top_agent %}<div class="player-main-agent"><small>Most played agent</small><b>{{top_agent.agent}}</b><span>{{top_agent.games}} maps</span></div>{% endif %}

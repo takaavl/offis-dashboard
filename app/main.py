@@ -76,8 +76,8 @@ ROLE_ICONS = {
 }
 CORE_PLAYER_META = {
     "Duke": {"role_label": "Duelist", "role_key": "duelist", "portrait_pos": "51% 23%"},
-    "Lindorm": {"role_label": "Recon / Flex", "role_key": "initiator", "portrait_pos": "50% 22%"},
-    "Lugia": {"role_label": "Flex / 2nd Duelist", "role_key": "duelist", "portrait_pos": "48% 19%"},
+    "Lindorm": {"role_label": "Flex", "role_key": "flex", "portrait_pos": "50% 22%"},
+    "Lugia": {"role_label": "Recon", "role_key": "initiator", "portrait_pos": "48% 19%"},
     "LJPH": {"role_label": "Controller / IGL", "role_key": "controller", "portrait_pos": "52% 20%"},
     "CeCe": {"role_label": "Sentinel", "role_key": "sentinel", "portrait_pos": "50% 20%"},
 }

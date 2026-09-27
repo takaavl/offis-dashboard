@@ -1,3 +1,12 @@
+# v1.0.1 — Roster role update
+
+## Changed
+- Lugia role updated to **Recon** (Initiator icon).
+- Lindorm role updated to **Flex**. Flex has no official Valorant class icon, so the site shows the label without a misleading class icon.
+
+## Data
+- No match, map, series, event, composition, or player statistics were changed.
+
 # v0.6.0 — Final polish pass
 
 ## Added
