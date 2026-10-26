@@ -12,7 +12,7 @@
     </div>
     <div class="match-map-context">
       <div class="match-map-context-top"><div><span>START SIDE</span><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}}</b></div><div><span>ROSTER</span><b>{{roster_label(m.roster_category)}}</b></div></div>
-      <div class="match-comp-block"><span>TEAM COMPOSITION</span><div class="agent-icon-line match-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+      <div class="match-comp-block"><span>TEAM COMPOSITION</span><div class="agent-icon-line match-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url|valorant_icon}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
     </div>
   </div>
   <div class="team-insight-grid teamplay-insights">
@@ -26,7 +26,7 @@
   <div class="side-split"><div><span>ATK rounds</span><b>{{i.attack_wins}} / {{i.attack_played}}</b><small>{{pct(i.attack_wins,i.attack_played)}}%</small></div><div><span>DEF rounds</span><b>{{i.defense_wins}} / {{i.defense_played}}</b><small>{{pct(i.defense_wins,i.defense_played)}}%</small></div></div>
   <div class="leaderboard analyst-leaderboard"><div class="leader-head"><span>Player</span><span>ACS</span><span>K / D / A</span><span>KAST</span><span>FK–FD</span><span>Trades</span></div>
   {% for p in item.leaderboard %}{% if loop.index==1 or (not p.is_team and loop.previtem.is_team) %}<div class="team-divider">{{ 'Our Team' if p.is_team else 'Opponents' }}</div>{% endif %}
-  <div class="leader-row {% if p.is_team %}our-team{% endif %}"><div class="leader-player">{% if p.agent_icon %}<img src="{{p.agent_icon}}" alt="{{p.agent}}">{% endif %}<b>{{p.display_name}}</b><small>{{p.agent}}</small></div><span>{{'%.0f'|format(p.acs or 0)}}</span><span>{{p.kills}} / {{p.deaths}} / {{p.assists}}</span><span>{{'%.0f'|format(p.kast or 0)}}%</span><span>{{p.first_kills}}–{{p.first_deaths}}</span><span>{{p.traded}}</span></div>{% endfor %}</div>
+  <div class="leader-row {% if p.is_team %}our-team{% endif %}"><div class="leader-player">{% if p.agent_icon %}<img src="{{p.agent_icon|valorant_icon}}" alt="{{p.agent}}">{% endif %}<b>{{p.display_name}}</b><small>{{p.agent}}</small></div><span>{{'%.0f'|format(p.acs or 0)}}</span><span>{{p.kills}} / {{p.deaths}} / {{p.assists}}</span><span>{{'%.0f'|format(p.kast or 0)}}%</span><span>{{p.first_kills}}–{{p.first_deaths}}</span><span>{{p.traded}}</span></div>{% endfor %}</div>
 </section>{% endfor %}
 <script>
 function showMatchMap(id,btn){document.querySelectorAll('.match-map-view').forEach(x=>x.classList.toggle('is-hidden',x.id!==id));document.querySelectorAll('.map-tab').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');history.replaceState(null,'','#'+id)}

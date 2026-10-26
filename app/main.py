@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import base64
 import hashlib
 import hmac
@@ -20,6 +21,23 @@ from .admin_import import import_official_map
 app = FastAPI(title="Team Dashboard")
 app.mount("/static", StaticFiles(directory=ROOT / "app" / "static"), name="static")
 templates = Jinja2Templates(directory=ROOT / "app" / "templates")
+
+
+_AGENT_UUID_RE = re.compile(r"/agents/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/", re.I)
+
+
+def valorant_agent_asset(url, filename):
+    """Use Valorant-API's current media CDN for an agent asset when its UUID is known."""
+    if not url:
+        return url
+    match = _AGENT_UUID_RE.search(str(url))
+    if not match:
+        return url
+    return f"https://media.valorant-api.com/agents/{match.group(1)}/{filename}"
+
+
+templates.env.filters["valorant_icon"] = lambda url: valorant_agent_asset(url, "displayicon.png")
+templates.env.filters["valorant_portrait"] = lambda url: valorant_agent_asset(url, "fullportrait.png")
 
 
 def pct(w, total):
@@ -271,9 +289,10 @@ def players_index(request: Request):
             meta=CORE_PLAYER_META.get(r["canonical_name"], {})
             d.update(meta)
             d["core_order"] = CORE_PLAYER_ORDER.index(r["canonical_name"]) if r["canonical_name"] in CORE_PLAYER_ORDER else 99
-            top=con.execute("""SELECT agent,MAX(agent_portrait_url) portrait,COUNT(*) n FROM player_map_stats WHERE player_id=? GROUP BY agent ORDER BY n DESC,agent LIMIT 1""",(r["id"],)).fetchone()
+            top=con.execute("""SELECT agent,MAX(agent_image_url) icon,COUNT(*) n FROM player_map_stats WHERE player_id=? GROUP BY agent ORDER BY n DESC,agent LIMIT 1""",(r["id"],)).fetchone()
             d["top_agent"] = top["agent"] if top else None
-            d["top_agent_portrait"] = top["portrait"] if top else None
+            d["top_agent_icon"] = top["icon"] if top else None
+            d["top_agent_portrait"] = valorant_agent_asset(top["icon"], "fullportrait.png") if top else None
             players.append(d)
         players.sort(key=lambda x: (0 if x["roster_status"]=="main" else 1, x.get("core_order",99), x["canonical_name"]))
     return templates.TemplateResponse(request,"players.html",{"players":players})

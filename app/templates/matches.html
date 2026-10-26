@@ -14,7 +14,7 @@
     {% for item in g.maps %}{% set m=item.row %}
     <a class="series-map-row map-media-row" href="/matches/{{s.id}}#map-{{m.id}}">
       <div class="map-media-block" {% if m.map_image_url %}style="--map-bg:url('{{m.map_image_url}}')"{% endif %}><span>{{m.map_name}}</span><strong>{{m.score_for}}–{{m.score_against}}</strong></div>
-      <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+      <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url|valorant_icon}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
       <div class="map-context-copy"><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}} start</b><small>{{roster_label(m.roster_category)}}</small></div>
       <span class="result {{m.result|lower}}">{{m.result}}</span>
     </a>{% endfor %}
@@ -22,7 +22,7 @@
   {% elif g.maps %}{% set item=g.maps[0] %}{% set m=item.row %}
   <a class="bo1-strip map-media-row bo1-media-row" href="/matches/{{s.id}}#map-{{m.id}}">
     <div class="map-media-block" {% if m.map_image_url %}style="--map-bg:url('{{m.map_image_url}}')"{% endif %}><span>{{m.map_name}}</span><strong>{{m.score_for}}–{{m.score_against}}</strong></div>
-    <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
+    <div class="series-comp-block"><small>TEAM COMP</small><div class="agent-icon-line featured-comp prominent-comp">{% for a in item.agents %}<img class="comp-agent-icon" src="{{a.agent_image_url|valorant_icon}}" alt="{{a.agent}}" title="{{a.agent}}">{% endfor %}</div></div>
     <div class="map-context-copy"><b>{{'ATK' if m.start_side=='attacker' else 'DEF'}} start</b><small>{{roster_label(m.roster_category)}}</small></div>
   </a>{% endif %}
 </article>{% endfor %}
