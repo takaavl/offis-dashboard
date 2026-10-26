@@ -1,3 +1,16 @@
+# v1.0.2 — Historical scoreboard cache hotfix
+
+## Fixed
+- Deploy preparation no longer regenerates historical scoreboard caches from blank raw JSON in the compact public database.
+- Existing valid historical scoreboards and teamplay insights are preserved across subsequent imports/deployments.
+- If a historical cache is missing or contains an empty leaderboard despite stored player stats, preparation attempts to rebuild it from `data/private_full.sqlite3` before compacting the public database.
+- Applied the same protection to both deploy-preparation scripts.
+
+## Data
+- No match results, event metadata, player statistics, roster assignments, or compositions were intentionally changed.
+
+---
+
 # v1.0.1 — Roster role update
 
 ## Changed
